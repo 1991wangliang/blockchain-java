@@ -24,6 +24,7 @@
     <modules>
         <module>blockchain-api</module>
         <module>blockchain-core</module>
+        <module>blockchain-p2p</module>
     </modules>
 
     <dependencies>
