@@ -9,7 +9,7 @@
     </parent>
     <groupId>com.codingapi</groupId>
     <artifactId>blockchain-core</artifactId>
-    <version>0.0.1-SNAPSHOT</version>
+    <version>0.0.1</version>
     <name>blockchain-core</name>
     <description>Demo project for Spring Boot</description>
 
