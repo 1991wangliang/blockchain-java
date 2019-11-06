@@ -4,7 +4,7 @@ import lombok.extern.slf4j.Slf4j;
 import one.wangwei.blockchain.block.Block;
 import one.wangwei.blockchain.block.Blockchain;
 import one.wangwei.blockchain.pow.ProofOfWork;
-import one.wangwei.blockchain.store.RocksDBUtils;
+import one.wangwei.blockchain.store.LevelDbUtils;
 import one.wangwei.blockchain.transaction.TXOutput;
 import one.wangwei.blockchain.transaction.Transaction;
 import one.wangwei.blockchain.transaction.UTXOSet;
@@ -99,7 +99,7 @@ public class CLI {
         } catch (Exception e) {
             log.error("Fail to parse cli command ! ", e);
         } finally {
-            RocksDBUtils.getInstance().closeDB();
+            LevelDbUtils.getInstance().closeDB();
         }
     }
 
@@ -122,6 +122,11 @@ public class CLI {
     private void createBlockchain(String address) {
         Blockchain blockchain = Blockchain.createBlockchain(address);
         UTXOSet utxoSet = new UTXOSet(blockchain);
+        //增加奖励
+        Transaction rewardTx = Transaction.newCoinbaseTX(address, "");
+        Block newBlock = blockchain.mineBlock(new Transaction[]{rewardTx});
+        new UTXOSet(blockchain).update(newBlock);
+        //更新UTXO索引
         utxoSet.reIndex();
         log.info("Done ! ");
     }
@@ -211,9 +216,12 @@ public class CLI {
         Blockchain blockchain = Blockchain.createBlockchain(from);
         // 新交易
         Transaction transaction = Transaction.newUTXOTransaction(from, to, amount, blockchain);
-        // 奖励
-        Transaction rewardTx = Transaction.newCoinbaseTX(from, "");
-        Block newBlock = blockchain.mineBlock(new Transaction[]{transaction, rewardTx});
+        //需要将这笔交易广播给矿工，这里暂时先仅做区块的存储，不做奖励
+
+        // 交易先不做奖励
+//        Transaction rewardTx = Transaction.newCoinbaseTX(from, "");
+//        Block newBlock = blockchain.mineBlock(new Transaction[]{transaction, rewardTx});
+        Block newBlock = blockchain.mineBlock(transaction);
         new UTXOSet(blockchain).update(newBlock);
         log.info("Success!");
     }

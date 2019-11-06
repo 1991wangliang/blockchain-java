@@ -7,7 +7,7 @@ import lombok.Synchronized;
 import lombok.extern.slf4j.Slf4j;
 import one.wangwei.blockchain.block.Block;
 import one.wangwei.blockchain.block.Blockchain;
-import one.wangwei.blockchain.store.RocksDBUtils;
+import one.wangwei.blockchain.store.LevelDbUtils;
 import one.wangwei.blockchain.util.SerializeUtils;
 import org.apache.commons.codec.binary.Hex;
 import org.apache.commons.lang3.ArrayUtils;
@@ -36,7 +36,7 @@ public class UTXOSet {
     public SpendableOutputResult findSpendableOutputs(byte[] pubKeyHash, int amount) {
         Map<String, int[]> unspentOuts = Maps.newHashMap();
         int accumulated = 0;
-        Map<String, byte[]> chainstateBucket = RocksDBUtils.getInstance().getChainstateBucket();
+        Map<String, byte[]> chainstateBucket = LevelDbUtils.getInstance().getChainstateBucket();
         for (Map.Entry<String, byte[]> entry : chainstateBucket.entrySet()) {
             String txId = entry.getKey();
             TXOutput[] txOutputs = (TXOutput[]) SerializeUtils.deserialize(entry.getValue());
@@ -71,7 +71,7 @@ public class UTXOSet {
      */
     public TXOutput[] findUTXOs(byte[] pubKeyHash) {
         TXOutput[] utxos = {};
-        Map<String, byte[]> chainstateBucket = RocksDBUtils.getInstance().getChainstateBucket();
+        Map<String, byte[]> chainstateBucket = LevelDbUtils.getInstance().getChainstateBucket();
         if (chainstateBucket.isEmpty()) {
             return utxos;
         }
@@ -93,10 +93,10 @@ public class UTXOSet {
     @Synchronized
     public void reIndex() {
         log.info("Start to reIndex UTXO set !");
-        RocksDBUtils.getInstance().cleanChainStateBucket();
+        LevelDbUtils.getInstance().cleanChainStateBucket();
         Map<String, TXOutput[]> allUTXOs = blockchain.findAllUTXOs();
         for (Map.Entry<String, TXOutput[]> entry : allUTXOs.entrySet()) {
-            RocksDBUtils.getInstance().putUTXOs(entry.getKey(), entry.getValue());
+            LevelDbUtils.getInstance().putUTXOs(entry.getKey(), entry.getValue());
         }
         log.info("ReIndex UTXO set finished ! ");
     }
@@ -124,7 +124,7 @@ public class UTXOSet {
                     // 余下未被使用的交易输出
                     TXOutput[] remainderUTXOs = {};
                     String txId = Hex.encodeHexString(txInput.getTxId());
-                    TXOutput[] txOutputs = RocksDBUtils.getInstance().getUTXOs(txId);
+                    TXOutput[] txOutputs = LevelDbUtils.getInstance().getUTXOs(txId);
 
                     if (txOutputs == null) {
                         continue;
@@ -138,9 +138,9 @@ public class UTXOSet {
 
                     // 没有剩余则删除，否则更新
                     if (remainderUTXOs.length == 0) {
-                        RocksDBUtils.getInstance().deleteUTXOs(txId);
+                        LevelDbUtils.getInstance().deleteUTXOs(txId);
                     } else {
-                        RocksDBUtils.getInstance().putUTXOs(txId, remainderUTXOs);
+                        LevelDbUtils.getInstance().putUTXOs(txId, remainderUTXOs);
                     }
                 }
             }
@@ -148,7 +148,7 @@ public class UTXOSet {
             // 新的交易输出保存到DB中
             TXOutput[] txOutputs = transaction.getOutputs();
             String txId = Hex.encodeHexString(transaction.getTxId());
-            RocksDBUtils.getInstance().putUTXOs(txId, txOutputs);
+            LevelDbUtils.getInstance().putUTXOs(txId, txOutputs);
         }
 
     }

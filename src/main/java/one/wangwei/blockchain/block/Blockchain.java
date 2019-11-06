@@ -5,7 +5,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import one.wangwei.blockchain.store.RocksDBUtils;
+import one.wangwei.blockchain.store.LevelDbUtils;
 import one.wangwei.blockchain.transaction.TXInput;
 import one.wangwei.blockchain.transaction.TXOutput;
 import one.wangwei.blockchain.transaction.Transaction;
@@ -38,7 +38,7 @@ public class Blockchain {
      * @return
      */
     public static Blockchain initBlockchainFromDB() {
-        String lastBlockHash = RocksDBUtils.getInstance().getLastBlockHash();
+        String lastBlockHash = LevelDbUtils.getInstance().getLastBlockHash();
         if (lastBlockHash == null) {
             throw new RuntimeException("ERROR: Fail to init blockchain from db. ");
         }
@@ -52,15 +52,15 @@ public class Blockchain {
      * @return
      */
     public static Blockchain createBlockchain(String address) {
-        String lastBlockHash = RocksDBUtils.getInstance().getLastBlockHash();
+        String lastBlockHash = LevelDbUtils.getInstance().getLastBlockHash();
         if (StringUtils.isBlank(lastBlockHash)) {
             // 创建 coinBase 交易
             String genesisCoinbaseData = "The Times 03/Jan/2009 Chancellor on brink of second bailout for banks";
             Transaction coinbaseTX = Transaction.newCoinbaseTX(address, genesisCoinbaseData);
             Block genesisBlock = Block.newGenesisBlock(coinbaseTX);
             lastBlockHash = genesisBlock.getHash();
-            RocksDBUtils.getInstance().putBlock(genesisBlock);
-            RocksDBUtils.getInstance().putLastBlockHash(lastBlockHash);
+            LevelDbUtils.getInstance().putBlock(genesisBlock);
+            LevelDbUtils.getInstance().putLastBlockHash(lastBlockHash);
         }
         return new Blockchain(lastBlockHash);
     }
@@ -70,7 +70,7 @@ public class Blockchain {
      *
      * @param transactions
      */
-    public Block mineBlock(Transaction[] transactions) {
+    public Block mineBlock(Transaction... transactions) {
         // 挖矿前，先验证交易记录
         for (Transaction tx : transactions) {
             if (!this.verifyTransactions(tx)) {
@@ -78,12 +78,13 @@ public class Blockchain {
                 throw new RuntimeException("ERROR: Fail to mine block ! Invalid transaction ! ");
             }
         }
-        String lastBlockHash = RocksDBUtils.getInstance().getLastBlockHash();
+        String lastBlockHash = LevelDbUtils.getInstance().getLastBlockHash();
         if (lastBlockHash == null) {
             throw new RuntimeException("ERROR: Fail to get last block hash ! ");
         }
-
+        //创建区块并挖矿
         Block block = Block.newBlock(lastBlockHash, transactions);
+        //将挖矿所得区块存在区块链上
         this.addBlock(block);
         return block;
     }
@@ -94,8 +95,8 @@ public class Blockchain {
      * @param block
      */
     private void addBlock(Block block) {
-        RocksDBUtils.getInstance().putLastBlockHash(block.getHash());
-        RocksDBUtils.getInstance().putBlock(block);
+        LevelDbUtils.getInstance().putLastBlockHash(block.getHash());
+        LevelDbUtils.getInstance().putBlock(block);
         this.lastBlockHash = block.getHash();
     }
 
@@ -120,7 +121,7 @@ public class Blockchain {
             if (StringUtils.isBlank(currentBlockHash)) {
                 return false;
             }
-            Block lastBlock = RocksDBUtils.getInstance().getBlock(currentBlockHash);
+            Block lastBlock = LevelDbUtils.getInstance().getBlock(currentBlockHash);
             if (lastBlock == null) {
                 return false;
             }
@@ -128,7 +129,7 @@ public class Blockchain {
             if (lastBlock.getPrevBlockHash().length() == 0) {
                 return true;
             }
-            return RocksDBUtils.getInstance().getBlock(lastBlock.getPrevBlockHash()) != null;
+            return LevelDbUtils.getInstance().getBlock(lastBlock.getPrevBlockHash()) != null;
         }
 
 
@@ -138,7 +139,7 @@ public class Blockchain {
          * @return
          */
         public Block next() {
-            Block currentBlock = RocksDBUtils.getInstance().getBlock(currentBlockHash);
+            Block currentBlock = LevelDbUtils.getInstance().getBlock(currentBlockHash);
             if (currentBlock != null) {
                 this.currentBlockHash = currentBlock.getPrevBlockHash();
                 return currentBlock;

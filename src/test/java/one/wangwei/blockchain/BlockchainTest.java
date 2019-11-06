@@ -13,13 +13,14 @@ public class BlockchainTest {
     public static void main(String[] args) {
         try {
 //            String[] argss = {"createwallet"};
-//            String[] argss = {"createblockchain", "-address", "1CceyiwYXh6vL6dLPw6WiNc5ihqVxwYHSA"};
-            // 1CceyiwYXh6vL6dLPw6WiNc5ihqVxwYHSA
-            // 1G9TkDEp9YTnGa6gS5zaWkwGQwKrRykXcf
-            // 1EKacQPNxTd8N7Y83VK11zoqm7bhUZiDHm
+//            String[] argss = {"createblockchain", "-address", "1CNU3b3W8SEhmZKgB8u7MLdv3DoR2dTwhn"};
+            // 1CNU3b3W8SEhmZKgB8u7MLdv3DoR2dTwhn
+            // 1PST8Hw7UoCa8s9Fr8J6KLErJDWmvHzig9
+            // 1Dk1SBDGhVVaDNS5mJLDUfk9txo7LD6uan
 //            String[] argss = {"printaddresses"};
-//            String[] argss = {"getbalance", "-address", "1G9TkDEp9YTnGa6gS5zaWkwGQwKrRykXcf"};
-            String[] argss = {"send", "-from", "1CceyiwYXh6vL6dLPw6WiNc5ihqVxwYHSA", "-to", "1EKacQPNxTd8N7Y83VK11zoqm7bhUZiDHm", "-amount", "5"};
+//            String[] argss = {"printchain"};
+            String[] argss = {"getbalance", "-address", "1PST8Hw7UoCa8s9Fr8J6KLErJDWmvHzig9"};
+//            String[] argss = {"send", "-from", "1CNU3b3W8SEhmZKgB8u7MLdv3DoR2dTwhn", "-to", "1PST8Hw7UoCa8s9Fr8J6KLErJDWmvHzig9", "-amount", "5"};
             CLI cli = new CLI(argss);
             cli.parse();
         } catch (Exception e) {
